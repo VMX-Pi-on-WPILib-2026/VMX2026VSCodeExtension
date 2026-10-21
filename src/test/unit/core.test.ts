@@ -151,6 +151,32 @@ suite('Project conversion', () => {
         assert.ok(result.includes("includeModule('edu.wpi.first', 'GradleRIO')"));
         assert.ok(result.includes("rootProject.name = 'Robot'"));
     });
+    test('removing a hook preserves the following user statement and CRLF line boundaries', () => {
+        for (const newline of ['\n', '\r\n']) {
+            const first = configureBuild(roborio.replace(/\n/g, newline), installation, 'vmx');
+            const modified = first + 'def answer = 42' + newline;
+            const converted = configureBuild(modified, installation, 'roborio');
+            assert.ok(converted.includes('}' + newline + 'def answer = 42'));
+            assert.strictEqual(converted.split(applyLine).length, 2);
+        }
+    });
+    test('slashy, dollar-slashy and command strings survive target conversion', () => {
+        const literals = [
+            'def pattern = /wpi.platforms.roborio/',
+            'def pattern2 = ~ /roborioDebug/',
+            'def multiline = /start\nwpi.platforms.roborio\nend/',
+            'def dollars = $/wpi.platforms.roborio $$$$ $/ /$',
+            'println /wpi.platforms.roborio/',
+            'def escaped = /prefix\\/wpi.platforms.roborio/',
+            "def division = 'literal'.length() / 2",
+            "def division2 = 'literal' / 2",
+            'def ratio = 8 / 2',
+            'def platformRatio = wpi.platforms.roborio / 2'
+        ];
+        const converted = configureBuild(roborio + literals.join('\n') + '\n', installation, 'vmx');
+        for (const literal of literals.slice(0, -1)) { assert.ok(converted.includes(literal), literal); }
+        assert.ok(converted.includes('def platformRatio = wpi.platforms.linuxarm64 / 2'));
+    });
     test('2020 projects, multiple targets and source builds fail before conversion', () => {
         assert.throws(() => configureBuild(roborio.replace('edu.wpi.first.GradleRIO', 'com.kauailabs.first.GradleRIO'), installation, 'vmx'), /2026/);
         assert.throws(() => detectTarget(roborio + roborio), /exactly one/);
@@ -275,6 +301,19 @@ suite('Offline and atomic project operations', () => {
         assert.ok(!await exists(path.join(state.projectStorageDir, 'offline')));
         assert.strictEqual(detectTarget(await io.readFile(path.join(temp, 'build.gradle'), 'utf8')), 'roborio');
         assert.strictEqual(await io.readFile(path.join(temp, 'src/main/cpp/robot.cpp'), 'utf8'), '// user robot');
+    });
+    test('symlink and real project paths share configuration, backup and offline storage', async function () {
+        if (process.platform === 'win32') { this.skip(); }
+        const real = path.join(temp, 'robot');
+        const link = path.join(temp, 'linked robot');
+        await io.mkdir(real);
+        await io.symlink(real, link);
+        await io.writeFile(path.join(real, 'build.gradle'), roborio);
+        await configureProject(link, installation, 'vmx', home);
+        assert.strictEqual(projectStorageDir(link, home), projectStorageDir(real, home));
+        assert.strictEqual((await readState(real, home))!.target, 'vmx');
+        await configureProject(real, installation, 'roborio', home);
+        assert.strictEqual((await readState(link, home))!.target, 'roborio');
     });
     test('failed preparation never changes build.gradle', async () => {
         await io.writeFile(path.join(temp, 'build.gradle'), roborio);

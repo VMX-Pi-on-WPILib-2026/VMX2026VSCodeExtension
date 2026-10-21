@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { realpathSync } from 'fs';
 import { createHash } from 'crypto';
 import * as os from 'os';
 import { pathToFileURL } from 'url';
@@ -30,14 +31,46 @@ export function removeBlock(text: string, name: string): string {
     return text.slice(0, start) + text.slice(last + (end + name).length).replace(/^\r?\n/, '');
 }
 
+// Slashy literals occur where an expression can begin, or as a command argument.
+// A slash following an expression (e.g. "value / 2") remains a division operator.
+function startsSlashyString(prefix: string): boolean {
+    const code = prefix.trimEnd();
+    if (!code || /[=([{,:;!&|?~+*%<>-]$/.test(code) || /\b(return|case|assert|throw|in)\s*$/.test(code)) { return true; }
+    const line = code.slice(code.lastIndexOf('\n') + 1).trim();
+    return /^[A-Za-z_]\w*(?:[.]\w+)*$/.test(line);
+}
+
 // Preserve indices while hiding Groovy strings and comments from structural searches.
 export function codeMask(text: string): string {
     const chars = text.split('');
     let i = 0;
+    let lastLiteralEnd = -1;
     while (i < text.length) {
         const start = i;
         if (text.startsWith('//', i)) { i = text.indexOf('\n', i); if (i < 0) { i = text.length; } }
         else if (text.startsWith('/*', i)) { const close = text.indexOf('*/', i + 2); if (close < 0) { throw new Error('Unclosed Gradle comment'); } i = close + 2; }
+        else if (text.startsWith('$/', i)) {
+            i += 2;
+            let closed = false;
+            while (i < text.length) {
+                if (text[i] === '$' && (text[i + 1] === '$' || text[i + 1] === '/')) { i += 2; }
+                else if (text.startsWith('/$', i)) { i += 2; closed = true; break; }
+                else { i++; }
+            }
+            if (!closed) { throw new Error('Unclosed Gradle dollar-slashy string'); }
+            lastLiteralEnd = i;
+        }
+        else if (text[i] === '/' && chars.slice(0, i).join('').trimEnd().length > lastLiteralEnd && startsSlashyString(chars.slice(0, i).join(''))) {
+            i++;
+            let closed = false;
+            while (i < text.length) {
+                if (text[i] === '\\') { i += 2; }
+                else if (text[i] === '/') { i++; closed = true; break; }
+                else { i++; }
+            }
+            if (!closed) { throw new Error('Unclosed Gradle slashy string'); }
+            lastLiteralEnd = i;
+        }
         else if (text[i] === "'" || text[i] === '"') {
             const quote = text.startsWith(text[i].repeat(3), i) ? text[i].repeat(3) : text[i];
             i += quote.length;
@@ -48,6 +81,7 @@ export function codeMask(text: string): string {
                 else { i++; }
             }
             if (!closed) { throw new Error('Unclosed Gradle string'); }
+            lastLiteralEnd = i;
         } else { i++; continue; }
         for (let j = start; j < i; j++) { if (chars[j] !== '\n' && chars[j] !== '\r') { chars[j] = ' '; } }
     }
@@ -105,7 +139,7 @@ export function configureBuild(original: string, installation: Installation, tar
     text = replaceCode(text, plugin, () => { pluginCount++; return 'id "edu.wpi.first.GradleRIO" version "' + installation.gradlerio.manifest.version + '"'; });
     if (pluginCount !== 1) { throw new Error('Expected edu.wpi.first.GradleRIO in a WPILib 2026 project. 2020 projects must be migrated first.'); }
     text = convertTarget(text, target);
-    text = text.replace(/\r?\n[ \t]*apply from: new File\(System\.getProperty\('user\.home'\), 'wpilib\/2026\/VMX2026\/vmx2026\.gradle'\)[ \t]*\r?\n?/g, '');
+    text = replaceCode(text, /\bapply from: new File\(System\.getProperty\('user\.home'\), 'wpilib\/2026\/VMX2026\/vmx2026\.gradle'\)[ \t]*(?:\r?\n|$)/gm, () => '');
     const newline = text.includes('\r\n') ? '\r\n' : '\n';
     return text.replace(/[ \t\r\n]*$/, '') + newline + applyLine + newline;
 }
@@ -136,7 +170,7 @@ export function configureSettings(original: string, installation: Installation):
 }
 
 export function projectStorageDir(root: string, home = defaultHome()): string {
-    const key = createHash('sha256').update(path.resolve(root).replace(/\\/g, '/')).digest('hex');
+    const key = createHash('sha256').update(realpathSync.native(root).replace(/\\/g, '/')).digest('hex');
     return path.join(home, 'projects', key);
 }
 
