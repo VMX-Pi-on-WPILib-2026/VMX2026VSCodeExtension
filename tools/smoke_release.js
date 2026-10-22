@@ -125,11 +125,11 @@ function gradle(dir, args) {
         projects.push(java);
         await configureProject(java, installation, 'vmx');
         let out = gradle(java, ['jar', 'printHalJni']);
-        if (!/HALJNI hal-cpp-2026\.2\.2-vmx\.1-linuxarm64\.zip/.test(out)) { throw new Error('VMX Java did not resolve the VMX HAL JNI'); }
+        if (!out.includes('HALJNI hal-cpp-' + installation.allwpilib.manifest.version + '-linuxarm64.zip')) { throw new Error('VMX Java did not resolve the VMX HAL JNI'); }
         console.log('ok: Java on VMX-Pi uses hal-cpp ' + installation.allwpilib.manifest.version + ' linuxarm64');
         await configureProject(java, installation, 'roborio');
         out = gradle(java, ['jar', 'printHalJni']);
-        if (!/HALJNI hal-cpp-2026\.2\.2-vmx\.1-linuxathena\.zip/.test(out)) { throw new Error('RoboRIO Java did not resolve the upstream athena HAL'); }
+        if (!out.includes('HALJNI hal-cpp-' + installation.allwpilib.manifest.version + '-linuxathena.zip')) { throw new Error('RoboRIO Java did not resolve the upstream athena HAL'); }
         console.log('ok: Java back on RoboRIO uses the upstream athena HAL from the same repository');
 
         if (process.env.SKIP_CPP !== '1') {
