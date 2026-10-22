@@ -139,6 +139,15 @@ export function configureBuild(original: string, installation: Installation, tar
     text = replaceCode(text, plugin, () => { pluginCount++; return 'id "edu.wpi.first.GradleRIO" version "' + installation.gradlerio.manifest.version + '"'; });
     if (pluginCount !== 1) { throw new Error('Expected edu.wpi.first.GradleRIO in a WPILib 2026 project. 2020 projects must be migrated first.'); }
     text = convertTarget(text, target);
+    // The WPILib C++ template hard-codes the RoboRIO account's deploy directory. VMX-pi
+    // deployments log in as ubuntu, so static files must follow the selected target's home.
+    if (target === 'vmx') {
+        text = replaceCode(text, /\bdirectory\s*=\s*(['"])\/home\/lvuser\/deploy\1/g,
+            () => "directory = deploy.targets.roborio.homeDirectory + '/deploy'");
+    } else {
+        text = replaceCode(text, /\bdirectory\s*=\s*deploy\.targets\.roborio\.homeDirectory\s*\+\s*(['"])\/deploy\1/g,
+            () => "directory = '/home/lvuser/deploy'");
+    }
     text = replaceCode(text, /\bapply from: new File\(System\.getProperty\('user\.home'\), 'wpilib\/2026\/VMX2026\/vmx2026\.gradle'\)[ \t]*(?:\r?\n|$)/gm, () => '');
     const newline = text.includes('\r\n') ? '\r\n' : '\n';
     return text.replace(/[ \t\r\n]*$/, '') + newline + applyLine + newline;

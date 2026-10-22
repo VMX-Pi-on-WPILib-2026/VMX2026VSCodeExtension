@@ -98,6 +98,8 @@ suite('Project conversion', () => {
         assert.ok(converted.includes("roborio(getTargetTypeClass('VmxPi'))"));
         assert.ok(converted.includes("getArtifactTypeClass('WPILibNativeArtifact')"));
         assert.ok(converted.includes("getArtifactTypeClass('FileTreeArtifact')"));
+        assert.ok(converted.includes("directory = deploy.targets.roborio.homeDirectory + '/deploy'"));
+        assert.ok(!converted.includes("directory = '/home/lvuser/deploy'"));
         assert.ok(converted.includes('deploy.targets.roborio.artifacts.frcCpp'));
         assert.ok(converted.includes('targetPlatform wpi.platforms.linuxarm64'));
         assert.ok(converted.includes('targetPlatform wpi.platforms.desktop'));
@@ -113,6 +115,7 @@ suite('Project conversion', () => {
         assert.strictEqual(detectTarget(restored), 'roborio');
         assert.ok(restored.includes("roborio(getTargetTypeClass('RoboRIO'))"));
         assert.ok(restored.includes("getArtifactTypeClass('FRCNativeArtifact')"));
+        assert.ok(restored.includes("directory = '/home/lvuser/deploy'"));
         assert.ok(restored.includes('targetPlatform wpi.platforms.roborio'));
         assert.ok(!restored.includes('wpi.platforms.linuxarm64'));
         assert.ok(restored.includes('customUserSetting = 42'));
