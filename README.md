@@ -7,8 +7,8 @@ RoboRIO and VMX-pi deploy targets. Nobody has to clone or build WPILib.
 How it works: the VMX GradleRIO fork adds a `VmxPi` deploy target, and the VMX HAL
 release replaces the WPILib HAL for `linuxarm64` with the VMX-pi HAL (every other
 platform keeps the upstream HAL). See `VMX.md` in
-[VMX-Pi-on-WPILib-2026/GradleRIO](https://github.com/VMX-Pi-on-WPILib-2026/GradleRIO)
-and `vmx/README.md` in [VMX-Pi-on-WPILib-2026/allwpilib](https://github.com/VMX-Pi-on-WPILib-2026/allwpilib).
+[VMXONWPI/GradleRIO](https://github.com/VMXONWPI/GradleRIO)
+and `vmx/README.md` in [VMXONWPI/allwpilib](https://github.com/VMXONWPI/allwpilib).
 
 ## Commands
 
@@ -38,8 +38,8 @@ enabled while the Driver Station is attached and enabled (VMX IO watchdog).
 
 ## Releases and project files
 
-The default repositories are `VMX-Pi-on-WPILib-2026/GradleRIO` and
-`VMX-Pi-on-WPILib-2026/allwpilib` (settings `vmx2026.gradleRIORepository`,
+The default repositories are `VMXONWPI/GradleRIO` and
+`VMXONWPI/allwpilib` (settings `vmx2026.gradleRIORepository`,
 `vmx2026.allwpilibRepository`; `vmx2026.includePrereleases` defaults to `true`). The
 extension looks at the 30 newest releases of each and picks a pair whose
 `vmx2026.json` manifests have the same `wpilibVersion`; the format is in

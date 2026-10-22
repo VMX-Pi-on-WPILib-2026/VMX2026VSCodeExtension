@@ -21,7 +21,7 @@ if (!gradlerioDir || !allwpilibDir) { console.error('usage: smoke_release.js <gr
 async function install(component, dir) {
     const manifest = validateManifest(JSON.parse(fs.readFileSync(path.join(dir, manifestAssetName), 'utf8')), component);
     const names = [manifest.archive, ...(manifest.additionalArchives || []).map(part => part.archive)];
-    const repository = 'VMX-Pi-on-WPILib-2026/' + (component === 'gradlerio' ? 'GradleRIO' : 'allwpilib');
+    const repository = 'VMXONWPI/' + (component === 'gradlerio' ? 'GradleRIO' : 'allwpilib');
     const release = { tag_name: 'v' + manifest.version, draft: false, prerelease: true, assets: names.map(name => ({ name,
         size: fs.statSync(path.join(dir, name)).size,
         browser_download_url: 'https://github.com/' + repository + '/releases/download/v' + manifest.version + '/' + name })) };

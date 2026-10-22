@@ -24,7 +24,7 @@ Maven repository exactly; use a version that cannot be confused with upstream
 Schema 2 splits a large component: `additionalArchives` lists up to 15 more
 `{ "archive", "sha256" }` parts, extracted into the same folder.
 
-## GradleRIO (`VMX-Pi-on-WPILib-2026/GradleRIO`)
+## GradleRIO (`VMXONWPI/GradleRIO`)
 
 `maven/` holds the plugin and its marker:
 
@@ -38,7 +38,7 @@ maven/edu/wpi/first/GradleRIO/edu.wpi.first.GradleRIO.gradle.plugin/<version>/..
 python3 tools/package_release.py gradlerio --version <version> --wpilib-version <wpilib> --maven <dir> --output <out>
 ```
 
-## VMX HAL (`VMX-Pi-on-WPILib-2026/allwpilib`, component `allwpilib`)
+## VMX HAL (`VMXONWPI/allwpilib`, component `allwpilib`)
 
 `maven/` holds `edu.wpi.first.hal:hal-cpp` and `hal-java` at `version`: the
 `linuxarm64` binaries are the VMX-pi HAL, every other platform is the upstream HAL of

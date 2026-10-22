@@ -54,7 +54,7 @@ const javaProject = roborio.replace('id "cpp"', 'id "java"').replace("'FRCNative
 
 function installed(component: 'gradlerio' | 'allwpilib') {
     return {
-        repository: 'VMX-Pi-on-WPILib-2026/' + (component === 'gradlerio' ? 'GradleRIO' : 'allwpilib'),
+        repository: 'VMXONWPI/' + (component === 'gradlerio' ? 'GradleRIO' : 'allwpilib'),
         directory: path.resolve(os.tmpdir(), 'vmx2026 test', component),
         release: { tag_name: 'v2026.2.2-vmx.1', draft: false, prerelease: false, assets: [] },
         manifest: { schemaVersion: 1, component, version: '2026.2.2-vmx.1', wpilibVersion: '2026.2.2',
@@ -227,7 +227,7 @@ suite('Release and archive validation', () => {
         }
     });
     test('selects compatible releases from both repos and honours the prerelease setting', async () => {
-        const repos = { gradlerio: 'VMX-Pi-on-WPILib-2026/GradleRIO', allwpilib: 'VMX-Pi-on-WPILib-2026/allwpilib' };
+        const repos = { gradlerio: 'VMXONWPI/GradleRIO', allwpilib: 'VMXONWPI/allwpilib' };
         const makeRelease = (tag: string, prerelease = false) => ({ tag_name: tag, draft: false, prerelease, assets: [{ name: manifestAssetName, browser_download_url: 'https://github.com/test/repo/releases/download/' + tag + '/' + manifestAssetName }] });
         const request = async (url: string) => {
             if (url.includes('/GradleRIO/releases')) { return [makeRelease('new', true), makeRelease('old')]; }
@@ -247,7 +247,7 @@ suite('Release and archive validation', () => {
         const implementation = 'maven/edu/wpi/first/GradleRIO/' + manifest.version + '/GradleRIO-' + manifest.version;
         const archive = zip([{ name: marker, content: '<project/>' }, { name: implementation + '.pom', content: '<project/>' }, { name: implementation + '.jar', content: 'fixture' }]);
         const candidate: Candidate = { ...installed('gradlerio'), manifest: { ...manifest, sha256: createHash('sha256').update(archive).digest('hex') },
-            release: { ...installed('gradlerio').release, assets: [{ name: 'bundle.zip', size: archive.length, browser_download_url: 'https://github.com/VMX-Pi-on-WPILib-2026/GradleRIO/releases/download/v1/bundle.zip' }] } };
+            release: { ...installed('gradlerio').release, assets: [{ name: 'bundle.zip', size: archive.length, browser_download_url: 'https://github.com/VMXONWPI/GradleRIO/releases/download/v1/bundle.zip' }] } };
         assert.strictEqual(candidateDownloadSize(candidate), archive.length);
         let calls = 0;
         const updates: { transferred: number; total: number; cached?: boolean }[] = [];
@@ -271,7 +271,7 @@ suite('Release and archive validation', () => {
         const make = (files: typeof entries): Candidate => {
             const archive = zip(files);
             return { ...installed('allwpilib'), manifest: { ...manifest, sha256: createHash('sha256').update(archive).digest('hex') },
-                release: { ...installed('allwpilib').release, assets: [{ name: 'bundle.zip', size: archive.length, browser_download_url: 'https://github.com/VMX-Pi-on-WPILib-2026/allwpilib/releases/download/v1/bundle.zip' }] },
+                release: { ...installed('allwpilib').release, assets: [{ name: 'bundle.zip', size: archive.length, browser_download_url: 'https://github.com/VMXONWPI/allwpilib/releases/download/v1/bundle.zip' }] },
                 archive } as Candidate & { archive: Buffer };
         };
         const good = make(entries) as Candidate & { archive: Buffer };

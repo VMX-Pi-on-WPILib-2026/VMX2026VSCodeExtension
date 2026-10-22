@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.3
+
+- Pin the extension repository metadata and default GradleRIO/VMX HAL repositories to `VMXONWPI`.
+
+Compatible with the GradleRIO and VMX HAL 2026.2.2-vmx.2 release pair.
+
 ## 2.0.2
 
 - Deploy static files into the VMX-pi login user's deploy directory when switching from RoboRIO.

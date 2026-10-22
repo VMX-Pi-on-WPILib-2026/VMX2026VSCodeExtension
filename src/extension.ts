@@ -30,8 +30,8 @@ export function activate(context: vscode.ExtensionContext): void {
         const settings = vscode.workspace.getConfiguration('vmx2026', folder.uri);
         progress.report({ message: 'Checking compatible VMX releases…' });
         const pair = await findInstallation({
-            gradlerio: settings.get<string>('gradleRIORepository', 'VMX-Pi-on-WPILib-2026/GradleRIO'),
-            allwpilib: settings.get<string>('allwpilibRepository', 'VMX-Pi-on-WPILib-2026/allwpilib')
+            gradlerio: settings.get<string>('gradleRIORepository', 'VMXONWPI/GradleRIO'),
+            allwpilib: settings.get<string>('allwpilibRepository', 'VMXONWPI/allwpilib')
         }, settings.get<boolean>('includePrereleases', true));
         const log = (text: string) => output.appendLine(text);
         const downloads = [pair.gradlerio, pair.allwpilib];
