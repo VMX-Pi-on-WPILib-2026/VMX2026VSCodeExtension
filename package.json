@@ -4,7 +4,7 @@
   "description": "Installs the VMX-pi HAL and GradleRIO releases, switches WPILib 2026 projects between RoboRIO and VMX-pi, and saves them for offline builds",
   "icon": "resources/VMX_128.png",
   "publisher": "vmx-pi-on-wpilib-2026",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "repository": {
     "type": "git",
     "url": "https://github.com/VMXONWPI/VMX2026VSCodeExtension"
