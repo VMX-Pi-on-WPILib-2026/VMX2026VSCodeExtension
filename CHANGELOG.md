@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.6
+
+- Pair with allwpilib 2026.2.2-vmx.5, which fixes the HAL initialization crash in `HAL_HandleEnum` lookup.
+
+Install this extension update, run `Update VMX2026 Version`, then redeploy the robot program.
+
+
 ## 2.0.5
 
 - Use allwpilib 2026.2.2-vmx.4, which provides the HALSIM symbols required by the matching WPILib C++ runtime on VMX hardware.
