@@ -53,3 +53,21 @@ python3 tools/package_release.py allwpilib --version <version> --wpilib-version 
 Studica's VMX HAL library (`libvmxpi_hal_cpp.so`, `VMXPi.h`) is never part of a release:
 `libwpiHal.so` only references it and the robot provides it. The packaging tool refuses
 archives that contain it.
+
+## Studica robot libraries (extension 2.0.4 and later)
+
+An allwpilib manifest may declare `"robotLibraries": true`. That release also
+contains `edu.wpi.first.wpilibc:wpilibc-cpp` (headers, sources and linuxarm64
+release/debug shared/static libraries) and `edu.wpi.first.wpilibj:wpilibj-java`
+(JAR, sources and Javadoc) at the same `version`. Package with
+`--with-robot-libraries`. The extension verifies required artifacts and selects
+these versions only for the VMX target. Switching to RoboRIO uses upstream
+wpilibc/wpilibj. HAL selection retains the existing multi-platform behavior.
+Older HAL-only manifests are still accepted.
+
+2026.2.2-vmx.3 includes the original Studica 1.1.8 public C++/Java APIs and matching
+SerialPort DTR JNI. The custom C++ libraries target linuxarm64 only; desktop
+C++ simulation using Studica classes requires a separate platform build.
+Java serial/DTR hardware APIs require the matching VMX robot-side JNI and
+physical device. These additions have host and link checks but no robot hardware
+validation. The proprietary Studica VMX SDK is still provided by the robot image.

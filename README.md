@@ -27,8 +27,8 @@ From the VMX icon in the editor title bar, or the `VMX2026` command palette cate
 2. Run `Change the deploy target to VMX-Pi (from RoboRIO)`. The first time it downloads
    the release pair (a JDK and Internet access are needed).
 3. Prepare the robot once (see `VMX.md`): 64-bit Ubuntu 24.04/26.04, Studica's
-   `vmxpi-hal` package, the Robot-Manager service, `sudo ln -s /home/ubuntu /home/lvuser`
-   (WPILib uses `/home/lvuser` on a real robot), and for Java `openjdk-17-jre-headless`.
+   `vmxpi-hal` package and Robot Manager `.deb` (creates `/home/lvuser` as a real directory),
+   and for Java `openjdk-17-jre-headless`.
 4. Optional: `Save VMX2026 Offline` while online.
 5. Build and deploy as usual (`./gradlew build`, `./gradlew deploy`, or the WPILib
    extension's commands). The VMX login defaults to `ubuntu` / `password`.
@@ -80,3 +80,14 @@ real Gradle (VMX-Pi and back to RoboRIO). Releases are packaged with
 `tools/package_release.py`. Package the extension with `npx @vscode/vsce package`.
 
 The command and release design follows the W4Studica (WPILib 2027) extension.
+
+## Studica APIs in 2.0.4
+
+Run `Update VMX2026 Version` to install allwpilib `2026.2.2-vmx.3` alongside
+GradleRIO `2026.2.2-vmx.2`. On VMX targets, matching custom wpilibc and wpilibj
+provide `studica` / `com.studica.frc` TitanQuad, TitanQuadEncoder, Cobra, Servo,
+ServoContinuous and Lidar. Remove the original Titan 1.1.8 vendor dependency.
+Switching back to RoboRIO selects upstream wpilibc/wpilibj. Older HAL-only
+releases are supported. The custom C++ binary artifacts target linuxarm64;
+desktop C++ simulation with the added classes requires a separate build.
+See the [API setup guide](https://wsuser1101.github.io/vmxonwpi/guides/vmx-pi/studica-api/).

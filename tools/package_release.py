@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--wpilib-version', required=True, help='WPILib release, e.g. 2026.2.2 (pairs the two components)')
     parser.add_argument('--maven', type=Path, required=True, help='Maven repository holding the built component')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--with-robot-libraries', action='store_true',
+                        help='Include matching VMX wpilibc/wpilibj artifacts (allwpilib only)')
     parser.add_argument('--archive-size-mib', type=int, default=1400,
                         help='Maximum input size per independent ZIP (default: 1400 MiB)')
     args = parser.parse_args()
@@ -44,6 +46,12 @@ def main():
     if not args.maven.is_dir():
         parser.error('--maven must be a built Maven repository directory')
 
+    if args.with_robot_libraries:
+        if args.component != 'allwpilib':
+            parser.error('--with-robot-libraries requires allwpilib')
+        COMPONENT_PATHS['allwpilib'] = COMPONENT_PATHS['allwpilib'] + [
+            'edu/wpi/first/wpilibc/wpilibc-cpp/{v}',
+            'edu/wpi/first/wpilibj/wpilibj-java/{v}']
     v = args.version
     if args.component == 'gradlerio':
         marker = args.maven / f'edu/wpi/first/GradleRIO/edu.wpi.first.GradleRIO.gradle.plugin/{v}/edu.wpi.first.GradleRIO.gradle.plugin-{v}.pom'
@@ -98,6 +106,8 @@ def main():
             archives.append(dict(archive=archive.name, sha256=checksum))
     manifest = dict(schemaVersion=2 if len(archives) > 1 else 1, component=args.component, version=v,
                     wpilibVersion=args.wpilib_version, **archives[0], mavenPath='maven')
+    if args.with_robot_libraries:
+        manifest['robotLibraries'] = True
     if len(archives) > 1:
         manifest['additionalArchives'] = archives[1:]
     (args.output / 'vmx2026.json').write_text(json.dumps(manifest, indent=2) + '\n')

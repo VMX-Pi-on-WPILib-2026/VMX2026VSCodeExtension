@@ -199,11 +199,28 @@ if (!stateFile.isFile()) throw new GradleException('VMX2026 project settings are
 def state = new JsonSlurper().parse(stateFile)
 def hal = state.installation.allwpilib
 def halVersion = hal.manifest.version
+def robotLibraries = state.target == 'vmx' && hal.manifest.robotLibraries == true
 wpi.versions.vmxHalVersion.set(halVersion)
 repositories {
     exclusiveContent {
         forRepository { maven { url = new File(hal.directory, hal.manifest.mavenPath).toURI() } }
-        filter { includeVersionByRegex('edu[.]wpi[.]first[.]hal', '.*', java.util.regex.Pattern.quote(halVersion)) }
+        filter {
+            includeVersionByRegex('edu[.]wpi[.]first[.]hal', '.*', java.util.regex.Pattern.quote(halVersion))
+            if (robotLibraries) {
+                includeVersion('edu.wpi.first.wpilibc', 'wpilibc-cpp', halVersion)
+                includeVersion('edu.wpi.first.wpilibj', 'wpilibj-java', halVersion)
+            }
+        }
+    }
+}
+if (robotLibraries) {
+    configurations.configureEach {
+        resolutionStrategy.eachDependency { dependency ->
+            if ((dependency.requested.group == 'edu.wpi.first.wpilibc' && dependency.requested.name == 'wpilibc-cpp') ||
+                (dependency.requested.group == 'edu.wpi.first.wpilibj' && dependency.requested.name == 'wpilibj-java')) {
+                dependency.useVersion(halVersion)
+            }
+        }
     }
 }
 if (new File(vmxProject, 'offline').isFile() && System.getenv('VMX2026_ONLINE') != '1') gradle.startParameter.offline = true

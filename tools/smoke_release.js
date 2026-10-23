@@ -127,6 +127,19 @@ function gradle(dir, args) {
         let out = gradle(java, ['jar', 'printHalJni']);
         if (!out.includes('HALJNI hal-cpp-' + installation.allwpilib.manifest.version + '-linuxarm64.zip')) { throw new Error('VMX Java did not resolve the VMX HAL JNI'); }
         console.log('ok: Java on VMX-Pi uses hal-cpp ' + installation.allwpilib.manifest.version + ' linuxarm64');
+        if (installation.allwpilib.manifest.robotLibraries) {
+            const source = path.join(java, 'src/main/java/frc/robot/Main.java');
+            const original = fs.readFileSync(source, 'utf8');
+            fs.writeFileSync(source, original.replace('static class Robot extends TimedRobot {}', `static class Robot extends TimedRobot {
+                private final com.studica.frc.TitanQuad motor = new com.studica.frc.TitanQuad(42, 0);
+                private final com.studica.frc.TitanQuadEncoder encoder = new com.studica.frc.TitanQuadEncoder(motor, 0, 0.001);
+                public void teleopPeriodic() { motor.set(0.25); }
+                public void disabledInit() { motor.stopMotor(); }
+            }`));
+            gradle(java, ['jar']);
+            console.log('ok: Java Studica TitanQuad and TitanQuadEncoder compile from the installed robot libraries');
+            fs.writeFileSync(source, original);
+        }
         await configureProject(java, installation, 'roborio');
         out = gradle(java, ['jar', 'printHalJni']);
         if (!out.includes('HALJNI hal-cpp-' + installation.allwpilib.manifest.version + '-linuxathena.zip')) { throw new Error('RoboRIO Java did not resolve the upstream athena HAL'); }
@@ -136,6 +149,20 @@ function gradle(dir, args) {
             const cpp = project('cpp');
             projects.push(cpp);
             await configureProject(cpp, installation, 'vmx');
+            if (installation.allwpilib.manifest.robotLibraries) {
+                const source = path.join(cpp, 'src/main/cpp/Robot.cpp');
+                fs.writeFileSync(source, `#include <frc/TimedRobot.h>
+#include <studica/TitanQuad.h>
+#include <studica/TitanQuadEncoder.h>
+class Robot : public frc::TimedRobot {
+    studica::TitanQuad motor{42, 0};
+    studica::TitanQuadEncoder encoder{motor, 0, 0.001};
+    void TeleopPeriodic() override { motor.Set(0.25); }
+    void DisabledInit() override { motor.StopMotor(); }
+};
+int main() { return frc::StartRobot<Robot>(); }
+`);
+            }
             // A single target platform, so Gradle leaves it out of task names and paths.
             gradle(cpp, ['installFrcUserProgramReleaseExecutable']);
             const lib = path.join(cpp, 'build/install/frcUserProgram/release/lib/libwpiHal.so');

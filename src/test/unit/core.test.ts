@@ -185,10 +185,12 @@ suite('Project conversion', () => {
         assert.throws(() => detectTarget(roborio + roborio), /exactly one/);
         assert.throws(() => configureSettings("pluginManagement { includeBuild('../GradleRIO') }", installation), /includeBuild/);
     });
-    test('the shared hook selects the installed VMX HAL version for edu.wpi.first.hal only', () => {
+    test('the shared hook selects HAL and optional robot libraries only for VMX targets', () => {
         assert.ok(globalGradleScript.includes('wpi.versions.vmxHalVersion.set(halVersion)'));
         assert.ok(globalGradleScript.includes("includeVersionByRegex('edu[.]wpi[.]first[.]hal'"));
         assert.ok(globalGradleScript.includes("'wpilib/2026/VMX2026'"));
+        assert.ok(globalGradleScript.includes("state.target == 'vmx' && hal.manifest.robotLibraries == true"));
+        assert.ok(globalGradleScript.includes("dependency.useVersion(halVersion)"));
     });
 });
 
@@ -208,6 +210,8 @@ suite('Release and archive validation', () => {
     teardown(async () => { await io.rm(temp, { recursive: true }); });
     test('rejects invalid manifests and traversal paths', () => {
         assert.throws(() => validateManifest({}, 'gradlerio'), /Invalid/);
+        assert.throws(() => validateManifest({ ...installation.allwpilib.manifest, robotLibraries: 'yes' }, 'allwpilib'), /robotLibraries/);
+        assert.throws(() => validateManifest({ ...installation.gradlerio.manifest, robotLibraries: true }, 'gradlerio'), /robotLibraries/);
         assert.throws(() => validateManifest({ ...installation.allwpilib.manifest, mavenPath: '../outside' }, 'allwpilib'), /escapes/);
         for (const name of ['../outside', '/absolute', 'C:\\escape', '..\\escape']) { assert.throws(() => inside(temp, name)); }
     });
@@ -259,6 +263,30 @@ suite('Release and archive validation', () => {
         assert.ok(updates.some(update => update.cached));
         assert.strictEqual(calls, 1);
         await assert.rejects(installComponent({ ...candidate, manifest: { ...manifest, sha256: 'b'.repeat(64) } }, temp, () => undefined, download), /SHA-256/);
+    });
+    test('robot library capability requires matching C++ and Java artifacts', async () => {
+        const v = installation.allwpilib.manifest.version;
+        const entries = [
+            { name: `maven/edu/wpi/first/hal/hal-cpp/${v}/hal-cpp-${v}.pom`, content: '<project/>' },
+            { name: `maven/edu/wpi/first/hal/hal-cpp/${v}/hal-cpp-${v}-linuxarm64.zip`, content: 'zip' },
+            { name: `maven/edu/wpi/first/hal/hal-java/${v}/hal-java-${v}.pom`, content: '<project/>' }
+        ];
+        const candidate = (files: typeof entries): [Candidate, Buffer] => {
+            const archive = zip(files);
+            return [{ ...installed('allwpilib'), manifest: { ...installation.allwpilib.manifest, robotLibraries: true, sha256: createHash('sha256').update(archive).digest('hex') },
+                release: { ...installed('allwpilib').release, assets: [{ name: 'bundle.zip', browser_download_url: 'https://github.com/VMXONWPI/allwpilib/releases/download/v1/bundle.zip' }] } }, archive];
+        };
+        let [release, archive] = candidate(entries);
+        await assert.rejects(installComponent(release, temp, () => undefined, async () => new Response(Readable.from([archive]))), /robot libraries/);
+        for (const [group, artifact, suffixes] of [
+            ['wpilibc', 'wpilibc-cpp', ['.pom', '-headers.zip', '-linuxarm64.zip', '-linuxarm64debug.zip']],
+            ['wpilibj', 'wpilibj-java', ['.pom', '.jar', '-sources.jar']]
+        ] as [string, string, string[]][]) {
+            for (const suffix of suffixes) { entries.push({ name: `maven/edu/wpi/first/${group}/${artifact}/${v}/${artifact}-${v}${suffix}`, content: 'fixture' }); }
+        }
+        [release, archive] = candidate(entries);
+        const result = await installComponent(release, temp, () => undefined, async () => new Response(Readable.from([archive])));
+        assert.ok(await exists(path.join(result.directory, '.complete')));
     });
     test('VMX HAL: the archive must contain hal-cpp (with linuxarm64) and hal-java at the release version', async () => {
         const manifest = installation.allwpilib.manifest;

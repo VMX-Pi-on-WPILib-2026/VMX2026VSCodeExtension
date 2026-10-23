@@ -18,6 +18,7 @@ export interface Manifest {
     sha256: string;
     additionalArchives?: { archive: string; sha256: string }[];
     mavenPath: string;
+    robotLibraries?: boolean;
 }
 export interface ReleaseAsset { name: string; browser_download_url: string; size?: number; }
 export interface Release { tag_name: string; draft: boolean; prerelease: boolean; assets: ReleaseAsset[]; }
@@ -40,6 +41,7 @@ export function validateManifest(input: unknown, component: Component): Manifest
         typeof m.wpilibVersion !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.+-]*$/.test(m.wpilibVersion) || typeof m.archive !== 'string' || !/^[^/\\]+\.zip$/.test(m.archive) || typeof m.sha256 !== 'string' || !/^[a-fA-F0-9]{64}$/.test(m.sha256)) {
         throw new Error('Invalid ' + component + ' ' + manifestAssetName + ' release manifest (schema version 1 or 2 required).');
     }
+    if (m.robotLibraries !== undefined && (component !== 'allwpilib' || typeof m.robotLibraries !== 'boolean')) { throw new Error('Invalid robotLibraries capability.'); }
     if (m.schemaVersion === 1 && m.additionalArchives !== undefined) { throw new Error('Multiple archives require schema version 2.'); }
     if (m.schemaVersion === 2) {
         if (!Array.isArray(m.additionalArchives) || !m.additionalArchives.length || m.additionalArchives.length > 15) { throw new Error('Invalid additional archives.'); }
@@ -176,6 +178,17 @@ export async function installComponent(candidate: Candidate, storage: string, lo
             }
             const vmxHal = path.join(repository, 'edu/wpi/first/hal/hal-cpp', manifest.version, 'hal-cpp-' + manifest.version + '-linuxarm64.zip');
             if (!await exists(vmxHal)) { throw new Error('VMX HAL archive is missing the linuxarm64 HAL.'); }
+            if (manifest.robotLibraries) {
+                for (const [group, artifact, files] of [
+                    ['wpilibc', 'wpilibc-cpp', ['.pom', '-headers.zip', '-linuxarm64.zip', '-linuxarm64debug.zip']],
+                    ['wpilibj', 'wpilibj-java', ['.pom', '.jar', '-sources.jar']]
+                ] as [string, string, string[]][]) {
+                    for (const suffix of files) {
+                        const file = path.join(repository, 'edu/wpi/first', group, artifact, manifest.version, artifact + '-' + manifest.version + suffix);
+                        if (!await exists(file)) { throw new Error('VMX robot libraries are missing ' + artifact + suffix); }
+                    }
+                }
+            }
         }
         await atomicWrite(path.join(staging, '.complete'), JSON.stringify(candidate));
         await io.rename(staging, directory);
