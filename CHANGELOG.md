@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.7
+
+- Use allwpilib 2026.2.2-vmx.6, which fixes a VMX HAL buddy allocator crash in log capture.
+
+Install this extension update, run `Update VMX2026 Version`, then redeploy the robot program.
+
+
 ## 2.0.6
 
 - Pair with allwpilib 2026.2.2-vmx.5, which fixes the HAL initialization crash in `HAL_HandleEnum` lookup.

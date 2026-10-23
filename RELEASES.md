@@ -65,7 +65,7 @@ these versions only for the VMX target. Switching to RoboRIO uses upstream
 wpilibc/wpilibj. HAL selection retains the existing multi-platform behavior.
 Older HAL-only manifests are still accepted.
 
-2026.2.2-vmx.5 includes the original Studica 1.1.8 public C++/Java APIs and matching
+2026.2.2-vmx.6 includes the original Studica 1.1.8 public C++/Java APIs and matching
 SerialPort DTR JNI. The custom C++ libraries target linuxarm64 only; desktop
 C++ simulation using Studica classes requires a separate platform build.
 Java serial/DTR hardware APIs require the matching VMX robot-side JNI and
@@ -75,7 +75,10 @@ validation. The proprietary Studica VMX SDK is still provided by the robot image
 
 ## HALSIM loader compatibility
 
-The 2026.2.2-vmx.5 linuxarm64 HAL exports the HALSIM APIs referenced by wpilibc, avoiding loader errors such as `undefined symbol: HALSIM_CancelRoboRioVInCurrentCallback`. Install VMX2026 extension 2.0.5, run `Update VMX2026 Version`, and redeploy to pick up the fixed runtime.
+The 2026.2.2-vmx.6 linuxarm64 HAL exports the HALSIM APIs referenced by wpilibc, avoiding loader errors such as `undefined symbol: HALSIM_CancelRoboRioVInCurrentCallback`. Install VMX2026 extension 2.0.5, run `Update VMX2026 Version`, and redeploy to pick up the fixed runtime.
 
 
-The 2026.2.2-vmx.5 HAL also fixes a dangling temporary string in the `HAL_HandleEnum` lookup that aborted during HAL initialization.
+The 2026.2.2-vmx.6 HAL also fixes a dangling temporary string in the `HAL_HandleEnum` lookup that aborted during HAL initialization.
+
+
+The 2026.2.2-vmx.6 HAL fixes right-buddy address calculation in the logging memory pool.

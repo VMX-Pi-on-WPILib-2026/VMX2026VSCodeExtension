@@ -81,9 +81,9 @@ real Gradle (VMX-Pi and back to RoboRIO). Releases are packaged with
 
 The command and release design follows the W4Studica (WPILib 2027) extension.
 
-## Studica APIs in 2.0.6
+## Studica APIs in 2.0.7
 
-Run `Update VMX2026 Version` to install allwpilib `2026.2.2-vmx.5` alongside
+Run `Update VMX2026 Version` to install allwpilib `2026.2.2-vmx.6` alongside
 GradleRIO `2026.2.2-vmx.2`. On VMX targets, matching custom wpilibc and wpilibj
 provide `studica` / `com.studica.frc` TitanQuad, TitanQuadEncoder, Cobra, Servo,
 ServoContinuous and Lidar. Remove the original Titan 1.1.8 vendor dependency.
